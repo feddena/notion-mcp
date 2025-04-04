@@ -1,15 +1,21 @@
-import { notionClient, NotionClient } from "../../notion/client";
+import { notionClient } from "../../notion/client";
 import { defineTool } from "../../utils/defineTool";
-
-type ListCommentsInput = Parameters<NotionClient["comments"]["list"]>[0];
 
 export const NOTION_LIST_COMMENTS_TOOL = defineTool((z) => ({
   name: "notion_list_comments",
   description: "List all comments for a block in Notion.",
   inputSchema: {
-    listOptions: z.custom<ListCommentsInput>(),
+    block_id: z.string(),
+    start_cursor: z.string().optional(),
+    page_size: z.number().optional(),
   },
   handler: async (input) => {
-    return await notionClient.comments.list(input.listOptions);
+    // Explicitly type the parameters to match the API requirements
+    const params = {
+      block_id: input.block_id,
+      ...(input.start_cursor && { start_cursor: input.start_cursor }),
+      ...(input.page_size && { page_size: input.page_size })
+    };
+    return await notionClient.comments.list(params);
   },
 }));
